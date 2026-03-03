@@ -42,8 +42,8 @@ local function FillRaidData()
     end
     if UnitInRaid("player") then
         for i = 1, GetNumRaidMembers() do
-            if GetRaidRosterInfo(i) then
-                local name = GetRaidRosterInfo(i)
+            local name = GetRaidRosterInfo(i)
+            if name then
                 local _, class = UnitClass("raid" .. i)
                 table.insert(MLBC.raid[class], name)
             end
@@ -53,8 +53,8 @@ local function FillRaidData()
         local playerName = UnitName("player")
         table.insert(MLBC.raid[playerClass], playerName)
         for i = 1, GetNumPartyMembers() do
-            if UnitName("party" .. i) then
-                local name = UnitName("party" .. i)
+            local name = UnitName("party" .. i)
+            if name then
                 local _, unitClass = UnitClass("party" .. i)
                 table.insert(MLBC.raid[unitClass], name)
             end
@@ -76,13 +76,11 @@ local function GetCandidateID(name)
     DEFAULT_CHAT_FRAME:AddMessage("|cffcc6666[MasterLootByClass]|r|cffffff00 " .. name .. " can not receive this item.|r")
 end
 
-local function IsOffline(name)
+local function IsOffline(player)
     for i = 1, GetNumRaidMembers() do
-        if GetRaidRosterInfo(i) then
-            local n, _, _, _, _, _, o = GetRaidRosterInfo(i)
-            if n == name and o == "Offline" then
-                return true
-            end
+        local name, rank, subgroup, level, class, fileName, zone, online, isDead = GetRaidRosterInfo(i)
+        if name == player then
+            return not online
         end
     end
     return false
@@ -288,14 +286,16 @@ end
 local lastSelectedSlot
 
 LootFrame:UnregisterEvent("OPEN_MASTER_LOOT_LIST")
+local OnMouseUp = LootFrame:GetScript("OnMouseUp")
 LootFrame:SetScript("OnMouseUp", function()
+    if OnMouseUp then OnMouseUp() end
     CloseDropDownMenus()
     lastSelectedSlot = nil
 end)
 
+local OnHide = DropDownList1:GetScript("OnHide")
 DropDownList1:SetScript("OnHide", function()
-    CloseDropDownMenus(2)
-    OPEN_DROPDOWNMENUS[1] = nil
+    if OnHide then OnHide() end
     lastSelectedSlot = nil
 end)
 
